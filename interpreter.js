@@ -1,4 +1,5 @@
 const prompt = require("prompt-sync")({ sigint: true });
+const nums = "1234567890";
 
 class Lexer {
     constructor(text) {
@@ -14,18 +15,40 @@ class Lexer {
         this.curr_char = this.pos < this.src.length ? this.src[this.pos] : null;
     }
 
+    parse_num() {
+        let num_str = "";
+        while (this.curr_char !== null && nums.includes(this.curr_char)) {
+            num_str += this.curr_char;
+            this.advance(); // Move to the next character
+        }
+        this.tokens.push(num_str); // Push the parsed number to tokens
+    }
+
     tokenize() {
         while (this.curr_char !== null) {
-            if (this.curr_char === "+") {
+            if (this.curr_char === " ") {
+                // Skip whitespace
+                this.advance();
+            } else if (this.curr_char === "+") {
                 this.tokens.push("PLUS");
+                this.advance();
             } else if (this.curr_char === "-") {
                 this.tokens.push("MINUS");
+                this.advance();
             } else if (this.curr_char === "*") {
                 this.tokens.push("MUL");
+                this.advance();
             } else if (this.curr_char === "/") {
                 this.tokens.push("DIV");
+                this.advance();
+            } else if (nums.includes(this.curr_char)) {
+                this.parse_num();
+                // Do not call advance() here, as parse_num() already advances
+            } else {
+                // Handle unknown characters (optional)
+                console.error(`Unknown character: ${this.curr_char}`);
+                this.advance();
             }
-            this.advance();
         }
         return this.tokens;
     }
@@ -42,7 +65,7 @@ function main() {
         }
         const lexer = new Lexer(text);
         const tokens = lexer.tokenize();
-        console.log("Tokens:", tokens);
+        console.log(tokens);
     }
 }
 
