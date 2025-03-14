@@ -50,6 +50,10 @@ class Lexer {
         return this.tokens;
     }
 }
+class Parser {
+    constructor(tokens) {}
+}
+main();
 
 function main() {
     let a = true;
@@ -65,5 +69,4 @@ function main() {
         console.log(tokens);
     }
 }
-
 main();
