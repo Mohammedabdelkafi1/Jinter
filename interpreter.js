@@ -19,15 +19,14 @@ class Lexer {
         let num_str = "";
         while (this.curr_char !== null && nums.includes(this.curr_char)) {
             num_str += this.curr_char;
-            this.advance(); // Move to the next character
+            this.advance();
         }
-        this.tokens.push(num_str); // Push the parsed number to tokens
+        this.tokens.push(num_str);
     }
 
     tokenize() {
         while (this.curr_char !== null) {
             if (this.curr_char === " ") {
-                // Skip whitespace
                 this.advance();
             } else if (this.curr_char === "+") {
                 this.tokens.push("PLUS");
@@ -43,9 +42,7 @@ class Lexer {
                 this.advance();
             } else if (nums.includes(this.curr_char)) {
                 this.parse_num();
-                // Do not call advance() here, as parse_num() already advances
             } else {
-                // Handle unknown characters (optional)
                 console.error(`Unknown character: ${this.curr_char}`);
                 this.advance();
             }
