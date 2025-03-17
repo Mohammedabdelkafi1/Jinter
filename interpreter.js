@@ -51,7 +51,10 @@ class Lexer {
     }
 }
 class Parser {
-    constructor(tokens) {}
+    constructor(tokens) {
+        this.idx = -1;
+        this.toks = Lexer.tokens;
+    }
 }
 main();
 
