@@ -1,75 +1,86 @@
 const prompt = require("prompt-sync")({ sigint: true });
-const nums = "1234567890";
 
 class Lexer {
-    constructor(text) {
+    constructor(text, debug) {
         this.src = text.split('');
-        this.pos = -1;
         this.tokens = [];
-        this.curr_char = null;
+        this.pos = -1;
+        this.curr_char = "";
+        this.digits = "1234567890";
+        this.letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
+        this.debug = debug;
         this.advance();
+        this.tokenize();
     }
 
     advance() {
-        this.pos += 1;
-        this.curr_char = this.pos < this.src.length ? this.src[this.pos] : null;
-    }
-
-    parse_num() {
-        let num_str = "";
-        while (this.curr_char !== null && nums.includes(this.curr_char)) {
-            num_str += this.curr_char;
-            this.advance();
+        this.curr_char = ++this.pos < this.src.length ? this.src[this.pos] : null;
+        if (this.debug) {
+            console.log(`Lexer advance: pos=${this.pos}, curr_char=${this.curr_char}`);
         }
-        this.tokens.push(num_str);
     }
 
     tokenize() {
+        const tokenMap = {
+            "+": "PLUS", "-": "MINUS", "*": "MULTIPLY", "/": "DIVIDE",
+            "=": "EQUALS", "&": "AND", "|": "OR", "!": "NOT",
+            "(": "LPAREN", ")": "RPAREN"
+        };
         while (this.curr_char !== null) {
-            if (this.curr_char === " ") {
+            if (tokenMap[this.curr_char]) {
+                this.tokens.push({ type: tokenMap[this.curr_char], value: this.curr_char });
                 this.advance();
-            } else if (this.curr_char === "+") {
-                this.tokens.push("PLUS");
-                this.advance();
-            } else if (this.curr_char === "-") {
-                this.tokens.push("MINUS");
-                this.advance();
-            } else if (this.curr_char === "*") {
-                this.tokens.push("MUL");
-                this.advance();
-            } else if (this.curr_char === "/") {
-                this.tokens.push("DIV");
-                this.advance();
-            } else if (nums.includes(this.curr_char)) {
-                this.parse_num();
+            } else if (this.curr_char === '"') {
+                this.parsestring();
+            } else if (this.curr_char === ' ') {
+                this.advance(); // Skip whitespace
+            } else if (this.digits.includes(this.curr_char)) {
+                this.parsenum();
+            } else if (this.letters.includes(this.curr_char)) {
+                this.parsevar();
             } else {
-                console.error(`Unknown character: ${this.curr_char}`);
-                this.advance();
+                throw new Error("Unexpected character: " + this.curr_char);
             }
         }
-        return this.tokens;
-    }
-}
-class Parser {
-    constructor(tokens) {
-        this.idx = -1;
-        this.toks = Lexer.tokens;
-    }
-}
-main();
-
-function main() {
-    let a = true;
-    while (a) {
-        let text = prompt("Jinter > ");
-        if (text === "exit") {
-            a = false;
-            console.log("Exiting...");
-            break;
+        if (this.debug) {
+            console.log(`Lexer tokens: ${JSON.stringify(this.tokens)}`);
         }
-        const lexer = new Lexer(text);
-        const tokens = lexer.tokenize();
-        console.log(tokens);
+    }
+
+    parsenum() {
+        let num_str = "";
+        while (this.curr_char !== null && this.digits.includes(this.curr_char)) {
+            num_str += this.curr_char;
+            this.advance();
+        }
+        this.tokens.push({ type: "NUMBER", value: Number(num_str) });
+    }
+
+    parsestring() {
+        let str_val = "";
+        this.advance(); // Skip the opening quote
+        while (this.curr_char !== null && this.curr_char !== '"') {
+            str_val += this.curr_char;
+            this.advance();
+        }
+        if (this.curr_char === '"') {
+            this.advance(); // Skip the closing quote
+            this.tokens.push({ type: "STRING", value: str_val });
+        } else {
+            throw new Error("Unterminated string literal");
+        }
+    }
+
+    parsevar() {
+        let var_str = "";
+        while (this.curr_char !== null && (this.letters + this.digits).includes(this.curr_char)) {
+            var_str += this.curr_char;
+            this.advance();
+        }
+        if (var_str === "true" || var_str === "false") {
+            this.tokens.push({ type: "BOOLEAN", value: var_str === "true" });
+        } else {
+            this.tokens.push({ type: "IDENTIFIER", value: var_str });
+        }
     }
 }
-main();
